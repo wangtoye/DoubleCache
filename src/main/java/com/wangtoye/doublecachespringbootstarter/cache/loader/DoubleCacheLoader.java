@@ -22,9 +22,15 @@ public class DoubleCacheLoader implements CacheLoader<Object, Object> {
         this.redisCache = redisCache;
     }
 
+    /**
+     * 如果值没有过期，则不会调用这个函数，如果过期，则会调用这个函数去load一份新缓存
+     * 因为集成了redis，所以可以交给redis去获取缓存，而此处直接返回null即可
+     * @param key 键
+     * @return 返回值
+     */
     @Nullable
     @Override
-    public Object load(@NonNull Object key) throws Exception {
+    public Object load(@NonNull Object key) {
         System.out.println(key);
         return null;
     }
