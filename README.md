@@ -10,11 +10,11 @@ caffenie 2.8.0
 
 # 使用方式
 1.引用依赖  
-<dependency>  
-    <groupId>com.wangtoye</groupId>  
-    <artifactId>double-cache-spring-boot-starter</artifactId>  
-    <version>0.0.1-SNAPSHOT</version>  
-</dependency>  
+&lt;dependency&gt;  
+    &lt;groupId&gt;com.wangtoye&lt;/groupId&gt;  
+    &lt;artifactId&gt;double-cache-spring-boot-starter&lt;/artifactId&gt;  
+    &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;  
+&lt;/dependency&gt;  
   
 2.引入其他需要的附属包  
 lombok，commons-pool2，jackson-databind，guava等等  
