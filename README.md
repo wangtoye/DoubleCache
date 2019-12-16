@@ -3,6 +3,7 @@
 利用caffeine和redis把数据库查询的结果进行缓存，加快查询速度。
 
 # 技术选型
+jdk 8  
 springboot 2.2.1.RELEASE  
 spring-boot-cache 2.2.1.RELEASE  
 spring-boot-redis 2.2.1.RELEASE  
