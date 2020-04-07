@@ -8,6 +8,7 @@ springboot 2.2.1.RELEASE
 spring-boot-cache 2.2.1.RELEASE  
 spring-boot-redis 2.2.1.RELEASE  
 caffenie 2.8.0  
+javassist 3.26.0-GA  
 
 # 使用方式
 1.引用依赖  
