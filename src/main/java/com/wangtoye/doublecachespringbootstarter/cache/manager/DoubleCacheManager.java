@@ -2,15 +2,16 @@ package com.wangtoye.doublecachespringbootstarter.cache.manager;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.wangtoye.doublecachespringbootstarter.cache.DoubleCache;
-import com.wangtoye.doublecachespringbootstarter.cache.RedisCache;
 import com.wangtoye.doublecachespringbootstarter.cache.loader.DoubleCacheLoader;
 import com.wangtoye.doublecachespringbootstarter.configuration.CaffeineCacheConfiguration;
 import com.wangtoye.doublecachespringbootstarter.configuration.DoubleCacheConfiguration;
 import org.springframework.cache.Cache;
 import org.springframework.cache.transaction.AbstractTransactionSupportingCacheManager;
+import org.springframework.data.redis.cache.RedisCache;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheWriter;
 
+import java.lang.reflect.Constructor;
 import java.util.*;
 
 /**
@@ -69,8 +70,10 @@ public class DoubleCacheManager extends AbstractTransactionSupportingCacheManage
      */
     @Override
     protected Cache getMissingCache(String name) {
-        RedisCache redisCache = new RedisCache(name, redisCacheWriter,
-                DoubleCacheConfiguration.defaultCacheConfig().getRedisCacheConfiguration());
+        RedisCache redisCache = getRedisCache(name, DoubleCacheConfiguration.defaultCacheConfig().getRedisCacheConfiguration());
+
+//        RedisCache redisCache = new RedisCache(name, redisCacheWriter,
+//                DoubleCacheConfiguration.defaultCacheConfig().getRedisCacheConfiguration());
         if (this.useL1Cache) {
             //如果开启了一级缓存则取默认配置构造缓存操作类
             caffeineCacheWriter =
@@ -94,8 +97,10 @@ public class DoubleCacheManager extends AbstractTransactionSupportingCacheManage
         CaffeineCacheConfiguration caffeineCacheConfiguration =
                 doubleCacheConfiguration.getCaffeineCacheConfiguration();
 
-        RedisCache redisCache = new RedisCache(name, redisCacheWriter,
-                doubleCacheConfiguration.getRedisCacheConfiguration());
+        RedisCache redisCache = getRedisCache(name, doubleCacheConfiguration.getRedisCacheConfiguration());
+
+//        RedisCache redisCache = new RedisCache(name, redisCacheWriter,
+//                doubleCacheConfiguration.getRedisCacheConfiguration());
 
         if (this.useL1Cache) {
             //根据caffeine的配置构造一个cacheWriter
@@ -111,6 +116,21 @@ public class DoubleCacheManager extends AbstractTransactionSupportingCacheManage
         }
 
         return new DoubleCache(name, caffeineCacheWriter, redisCache, allowNullValues, topic);
+    }
+
+    /**
+     * 使用javassist创建redisCache实例
+     */
+    private RedisCache getRedisCache(String name, RedisCacheConfiguration redisCacheConfiguration) {
+        try {
+            Constructor<RedisCache> constructor = RedisCache.class
+                    .getDeclaredConstructor(String.class, RedisCacheWriter.class, RedisCacheConfiguration.class);
+            return constructor.newInstance(name, redisCacheWriter,
+                    redisCacheConfiguration);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 

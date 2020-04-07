@@ -7,6 +7,10 @@ import com.wangtoye.doublecachespringbootstarter.configuration.CaffeineCacheConf
 import com.wangtoye.doublecachespringbootstarter.configuration.DoubleCacheConfiguration;
 import com.wangtoye.doublecachespringbootstarter.listener.DoubleCacheMessageListener;
 import com.wangtoye.doublecachespringbootstarter.properties.DoubleCacheProperties;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtNewMethod;
+import javassist.Modifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -40,6 +44,13 @@ import java.util.Objects;
 @ConditionalOnBean(RedisConnectionFactory.class)
 @EnableConfigurationProperties(DoubleCacheProperties.class)
 public class DoubleCacheStarterAutoConfigure {
+
+    private static final String LAUNCHED_CLASS_LOADER = "org.springframework.boot.loader.LaunchedURLClassLoader";
+
+
+    public DoubleCacheStarterAutoConfigure() {
+        reWriteRedisCache();
+    }
 
     /**
      * 使用Spring CacheManager管理缓存
@@ -100,5 +111,43 @@ public class DoubleCacheStarterAutoConfigure {
         RedisCacheConfiguration defaultRedisCacheConfig = doubleCacheConfiguration.getRedisCacheConfiguration();
         return DoubleCacheConfiguration.buildDoubleCacheConfigurationMap(defaultCaffeineCacheConfig,
                 defaultRedisCacheConfig, doubleCacheProperties);
+    }
+
+    /**
+     * 重写RedisCache，添加一个 推送消息给订阅的系统 的函数
+     */
+    private void reWriteRedisCache() {
+        try {
+            ClassPool pool = ClassPool.getDefault();
+            CtClass cci = pool.get("com.wangtoye.doublecachespringbootstarter.cache.RedisCacheExt");
+            CtClass cc = pool.get("org.springframework.data.redis.cache.RedisCache");
+            cc.addInterface(cci);
+            cc.addMethod(CtNewMethod.make(
+                    "public void convertAndSend(String topicName, Object message) {\n" +
+                            "    if (cacheWriter instanceof com.wangtoye.doublecachespringbootstarter.cache.writer.RedisCallbackCacheWriter) {\n" +
+                            "        ((com.wangtoye.doublecachespringbootstarter.cache.writer.RedisCallbackCacheWriter) cacheWriter).convertAndSend(topicName, message);\n" +
+                            "    }\n" +
+                            "}", cc));
+            cc.getDeclaredConstructor(new CtClass[]{
+                    pool.get(String.class.getName())
+                    , pool.get(RedisCacheWriter.class.getName())
+                    , pool.get(RedisCacheConfiguration.class.getName())
+            }).setModifiers(Modifier.PUBLIC);
+
+
+            // 上下文类加载器
+            ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+            if (!LAUNCHED_CLASS_LOADER.equals(contextClassLoader.getClass().getName())) {
+                if (LAUNCHED_CLASS_LOADER.equals(contextClassLoader.getParent().getClass().getName())) {
+                    contextClassLoader = contextClassLoader.getParent();
+                } else {
+                    contextClassLoader = ClassLoader.getSystemClassLoader();
+                }
+            }
+            cc.toClass(contextClassLoader, null);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

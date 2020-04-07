@@ -1,9 +1,9 @@
 package com.wangtoye.doublecachespringbootstarter.cache.loader;
 
 import com.github.benmanes.caffeine.cache.CacheLoader;
-import com.wangtoye.doublecachespringbootstarter.cache.RedisCache;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.springframework.data.redis.cache.RedisCache;
 
 import java.util.Objects;
 
@@ -25,6 +25,7 @@ public class DoubleCacheLoader implements CacheLoader<Object, Object> {
     /**
      * 如果值没有过期，则不会调用这个函数，如果过期，则会调用这个函数去load一份新缓存
      * 因为集成了redis，所以可以交给redis去获取缓存，而此处直接返回null即可
+     *
      * @param key 键
      * @return 返回值
      */

@@ -1,11 +1,13 @@
 package com.wangtoye.doublecachespringbootstarter.cache;
 
+
 import com.github.benmanes.caffeine.cache.Cache;
 import com.wangtoye.doublecachespringbootstarter.listener.DoubleCacheMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.cache.support.AbstractValueAdaptingCache;
+import org.springframework.data.redis.cache.RedisCache;
 import org.springframework.data.redis.cache.RedisCacheWriter;
 
 import java.util.concurrent.Callable;
@@ -233,7 +235,7 @@ public class DoubleCache extends AbstractValueAdaptingCache {
      * @param message 消息
      */
     private void push(DoubleCacheMessage message) {
-        redisCache.convertAndSend(topic, message);
+        ((RedisCacheExt)redisCache).convertAndSend(topic, message);
     }
 
     /**
